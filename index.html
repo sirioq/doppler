@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doppler Effect</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
+:root{--bg:#fafaf8;--white:#fff;--border:#e8e6e1;--border-focus:#b5a898;--text:#2c2825;--muted:#9a9189;--soft:#f2f0ec;
+--accent:#f77e9d;--accent-dark:#d45f7f;--accent-bg:#fef0f4;--accent-border:rgba(247,126,157,.35);
+--blue:#4a7fc1;--green:#4a9e6e;--shadow-sm:0 1px 3px rgba(44,40,37,.08),0 4px 16px rgba(44,40,37,.04);--shadow-md:0 2px 8px rgba(44,40,37,.1),0 8px 24px rgba(44,40,37,.06);--radius:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--white);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.logo{width:30px;height:30px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+header h1{font-family:'DM Serif Display',serif;font-size:1.25rem;font-weight:400}
+.app{display:grid;grid-template-columns:300px 1fr;flex:1;min-height:0;height:calc(100vh - 63px);height:calc(100dvh - 63px)}
+.sidebar{background:var(--white);border-right:1px solid var(--border);overflow-y:auto}
+.panel{padding:16px 20px;border-bottom:1px solid var(--border)}
+.panel-title{font-size:.63rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.field{margin-bottom:12px}.field:last-child{margin-bottom:0}
+.field label{display:flex;justify-content:space-between;font-size:.72rem;font-weight:500;color:var(--muted);margin-bottom:5px}
+.field label b{color:var(--accent-dark);font-weight:600;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+.toggle-group{display:grid;gap:5px}
+.toggle-btn{display:flex;align-items:center;justify-content:center;padding:7px 8px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--soft);color:var(--muted);font:500 .78rem 'DM Sans',sans-serif;cursor:pointer;transition:all .15s;user-select:none}
+.toggle-btn:hover{border-color:var(--border-focus);color:var(--text);background:var(--white)}
+.toggle-btn.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600}
+.btn{padding:7px 12px;border-radius:var(--radius);font:500 .78rem 'DM Sans',sans-serif;cursor:pointer;border:1.5px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn-primary:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
+.btn-ghost{background:transparent;color:var(--muted);border-color:var(--border)}.btn-ghost:hover{border-color:var(--border-focus);color:var(--text);background:var(--soft)}
+.chart-area{display:flex;flex-direction:column;padding:16px 20px;gap:10px;overflow:hidden;min-height:0;min-width:0;background:var(--bg)}
+.stats-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:4px 11px;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-sm)}
+.pill-label{font-size:.63rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.pill-value{font-size:.8rem;font-weight:600}
+.chart-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:var(--shadow-md)}
+#cc{flex:1;min-height:0;min-width:0;position:relative}
+canvas{position:absolute;inset:12px;width:calc(100% - 24px);height:calc(100% - 24px);border-radius:8px}
+.card-title{font-family:'DM Serif Display',serif;font-size:1rem;font-weight:400;margin-bottom:6px}
+.work{font-size:.82rem;line-height:1.9;overflow-x:auto}
+.work div{white-space:nowrap}
+.work code{background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);padding:1px 8px;border-radius:6px;font:500 .8rem 'DM Sans',sans-serif}
+.tag{display:inline-block;min-width:150px;color:var(--muted);font-size:.74rem;font-weight:500}
+.hint{font-size:.76rem;color:var(--muted);line-height:1.5}
+.chk{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);margin-top:10px;cursor:pointer}
+.chk input{accent-color:var(--accent)}
+@media(max-width:860px){.app{grid-template-columns:1fr;height:auto}.sidebar{order:2;border-right:0;border-top:1px solid var(--border)}.chart-area{padding:14px;overflow:visible}#cc{flex:none;height:340px}}
+</style>
+</head>
+<body>
+<header><div class="logo">🚑</div><h1>Doppler Effect</h1></header>
+<div class="app">
+<aside class="sidebar">
+ <div class="panel"><div class="panel-title">Moving source</div>
+  <div class="field"><label>Source speed <b id="vsO"></b></label><input type="range" id="vs" min="0" max="300" step="10" value="150"></div>
+  <div class="field"><label>Source frequency <b id="fO"></b></label><input type="range" id="f" min="200" max="800" step="10" value="500"></div>
+ </div>
+ <div class="panel"><div class="panel-title">Animation</div>
+  <div class="toggle-group" style="grid-template-columns:1fr 1fr"><button class="btn btn-primary" id="play">⏸ Pause</button><button class="btn btn-ghost" id="restart">↺ Restart</button></div>
+  <label class="chk"><input type="checkbox" id="cen"> Show where each wave was emitted</label>
+  <label class="chk"><input type="checkbox" id="wk" checked> Show workings</label>
+ </div>
+ <div class="panel"><div class="panel-title">Listen (sound)</div>
+  <div class="toggle-group" style="grid-template-columns:repeat(3,1fr)" id="snd">
+   <button class="toggle-btn on" data-k="off">Off</button><button class="toggle-btn" data-k="0">Observer A</button><button class="toggle-btn" data-k="1">Observer B</button></div>
+ </div>
+ <div class="panel"><p class="hint">The speed of sound in air is 340 m/s. The animation is slowed right down so you can see the waves. The observers do not move – only the source does.</p></div>
+</aside>
+<main class="chart-area">
+ <div class="stats-row">
+  <div class="pill"><span class="pill-label">Source</span><span class="pill-value" id="sF"></span></div>
+  <div class="pill"><span class="pill-label" style="color:var(--blue)">Heard at A</span><span class="pill-value" id="sA"></span></div>
+  <div class="pill"><span class="pill-label" style="color:var(--green)">Heard at B</span><span class="pill-value" id="sB"></span></div>
+ </div>
+ <div class="chart-card" id="cc"><canvas id="cv"></canvas></div>
+ <div class="chart-card" id="wcard">
+  <div class="card-title">Workings</div>
+  <div class="work" id="work"></div>
+ </div>
+</main>
+</div>
+<script>
+const V=340,VPX=150,RATE=250,$=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d');
+let W=800,H=400,sc=.8,t=0,srcX=0,nextEmit=0,waves=[],playing=true,snd='off',last=performance.now(),pings=[-9,-9];
+const vsMs=()=>+$('vs').value,fHz=()=>+$('f').value;
+function startX(){return vsMs()>0?W*.2:W*.5}
+function reset(){waves=[];t=0;nextEmit=0;pings=[-9,-9];srcX=startX()}
+function size(){const dpr=window.devicePixelRatio||1,c=$('cc');W=c.clientWidth-24;H=c.clientHeight-24;if(W<50||H<50)return;
+ sc=W/1000;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);reset()}
+new ResizeObserver(size).observe($('cc'));size();
+
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'⏸ Pause':'▶ Play';$('play').className='btn '+(playing?'btn-primary':'btn-ghost')};
+$('restart').onclick=reset;
+document.querySelectorAll('#snd button').forEach(b=>b.onclick=()=>{snd=b.dataset.k;
+ document.querySelectorAll('#snd button').forEach(x=>x.classList.toggle('on',x===b));if(snd!=='off')startAudio()});
+$('wk').onchange=()=>$('wcard').style.display=$('wk').checked?'':'none';
+let ac,osc,gain;
+function startAudio(){if(ac){ac.resume();return}
+ ac=new (window.AudioContext||window.webkitAudioContext)();osc=ac.createOscillator();gain=ac.createGain();gain.gain.value=0;
+ osc.type='sine';osc.connect(gain);gain.connect(ac.destination);osc.start()}
+
+function fmt(x){return Math.round(x)+' Hz'}
+function frame(now){
+ const dt=Math.min(.05,(now-last)/1000);last=now;
+ const vs=vsMs(),f=fHz(),vsPx=VPX*sc*vs/V,vPx=VPX*sc,rate=f/RATE;
+ const fA=f*V/(V-vs),fB=f*V/(V+vs),obs=[W*.92,W*.08];
+ if(playing){
+  t+=dt;srcX+=vsPx*dt;
+  if(nextEmit===0)nextEmit=t;
+  while(t>=nextEmit){waves.push({x:srcX-vsPx*(t-nextEmit),t0:nextEmit});nextEmit+=1/rate}
+  waves=waves.filter(w=>vPx*(t-w.t0)<W*1.1);
+  for(const w of waves){const r=vPx*(t-w.t0),rp=vPx*(t-dt-w.t0);
+   obs.forEach((ox,k)=>{const d=Math.abs(ox-w.x);if(rp<d&&r>=d)pings[k]=t})}
+  if(srcX>W*.8){reset()}
+ }
+ // draw
+ ctx.fillStyle='#fffdf9';ctx.fillRect(0,0,W,H);
+ ctx.strokeStyle='#e8e6e1';ctx.lineWidth=1;ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();ctx.setLineDash([]);
+ ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();
+ const maxR=W*.95;
+ for(const w of waves){const r=vPx*(t-w.t0);if(r<1)continue;
+  ctx.strokeStyle='rgba(212,95,127,'+(.85*(1-r/maxR)+.12).toFixed(3)+')';ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(w.x,H/2,r,0,7);ctx.stroke();
+  if($('cen').checked){ctx.fillStyle='rgba(154,145,137,.8)';ctx.beginPath();ctx.arc(w.x,H/2,3,0,7);ctx.fill()}}
+ ctx.restore();
+ ctx.strokeStyle='#b5a898';ctx.lineWidth=1;ctx.strokeRect(.5,.5,W-1,H-1);
+ // observers
+ const cols=['#4a7fc1','#4a9e6e'],names=['Observer A','Observer B'],sub=['(in front)','(behind)'];
+ obs.forEach((ox,k)=>{const age=t-pings[k];
+  if(age>=0&&age<.4){ctx.strokeStyle=cols[k];ctx.globalAlpha=1-age/.4;ctx.lineWidth=2;ctx.beginPath();ctx.arc(ox,H/2,16+age*70,0,7);ctx.stroke();ctx.globalAlpha=1}
+  ctx.fillStyle=cols[k];ctx.beginPath();ctx.arc(ox,H/2,15,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='600 13px "DM Sans",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(k?'B':'A',ox,H/2+1);
+  ctx.fillStyle='#9a9189';ctx.font='500 12px "DM Sans",sans-serif';ctx.textBaseline='top';ctx.fillText(names[k],ox,H/2+24);ctx.fillText(sub[k],ox,H/2+39)});
+ // source
+ ctx.fillStyle='#d45f7f';ctx.beginPath();ctx.arc(srcX,H/2,11,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
+ ctx.fillStyle='#9a9189';ctx.font='500 12px "DM Sans",sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText('Source',srcX,H/2-30);
+ if(vs>0){ctx.strokeStyle='#d45f7f';ctx.fillStyle='#d45f7f';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(srcX+16,H/2-18);ctx.lineTo(srcX+34,H/2-18);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(srcX+38,H/2-18);ctx.lineTo(srcX+30,H/2-22);ctx.lineTo(srcX+30,H/2-14);ctx.fill()}
+ // readouts
+ $('vsO').textContent=vs+' m/s';$('fO').textContent=fmt(f);$('sF').textContent=fmt(f);$('sA').textContent=fmt(fA);$('sB').textContent=fmt(fB);
+ if($('wk').checked){const h='<div><span class="tag">A – source approaching</span> <code>f′ = f × v ÷ (v − vₛ) = '+f+' × 340 ÷ (340 − '+vs+') = '+fmt(fA)+'</code></div>'+
+  '<div><span class="tag">B – source moving away</span> <code>f′ = f × v ÷ (v + vₛ) = '+f+' × 340 ÷ (340 + '+vs+') = '+fmt(fB)+'</code></div>';
+  if(h!==frame.h){$('work').innerHTML=h;frame.h=h}}
+ // sound
+ if(ac&&gain){const fr=snd==='0'?fA:fB;gain.gain.setTargetAtTime(snd!=='off'&&playing?.06:0,ac.currentTime,.03);osc.frequency.setTargetAtTime(Math.min(2500,Math.max(80,fr)),ac.currentTime,.03)}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
