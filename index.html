@@ -38,10 +38,13 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
 #cc{flex:1;min-height:0;min-width:0;position:relative}
 canvas{position:absolute;inset:12px;width:calc(100% - 24px);height:calc(100% - 24px);border-radius:8px}
 .card-title{font-family:'DM Serif Display',serif;font-size:1rem;font-weight:400;margin-bottom:6px}
-.work{font-size:.82rem;line-height:1.9;overflow-x:auto}
-.work div{white-space:nowrap}
+.work{display:flex;gap:12px 32px;flex-wrap:wrap;font-size:.9rem;line-height:1.4}
+.wk{flex:1;min-width:320px}
+.eq{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.fr{display:inline-flex;flex-direction:column;align-items:center;text-align:center;line-height:1.3;font-size:.86rem}
+.fr span:first-child{border-bottom:1.5px solid var(--text);padding:0 5px 2px}.fr span:last-child{padding:2px 5px 0}
 .work code{background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);padding:1px 8px;border-radius:6px;font:500 .8rem 'DM Sans',sans-serif}
-.tag{display:inline-block;min-width:150px;color:var(--muted);font-size:.74rem;font-weight:500}
+.tag{display:block;margin-bottom:6px;color:var(--muted);font-size:.74rem;font-weight:500}
 .hint{font-size:.76rem;color:var(--muted);line-height:1.5}
 .chk{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);margin-top:10px;cursor:pointer}
 .chk input{accent-color:var(--accent)}
@@ -139,8 +142,9 @@ function frame(now){
   ctx.beginPath();ctx.moveTo(srcX+38,H/2-18);ctx.lineTo(srcX+30,H/2-22);ctx.lineTo(srcX+30,H/2-14);ctx.fill()}
  // readouts
  $('vsO').textContent=vs+' m/s';$('fO').textContent=fmt(f);$('sF').textContent=fmt(f);$('sA').textContent=fmt(fA);$('sB').textContent=fmt(fB);
- if($('wk').checked){const h='<div><span class="tag">A – source approaching</span> <code>f′ = f × v ÷ (v − vₛ) = '+f+' × 340 ÷ (340 − '+vs+') = '+fmt(fA)+'</code></div>'+
-  '<div><span class="tag">B – source moving away</span> <code>f′ = f × v ÷ (v + vₛ) = '+f+' × 340 ÷ (340 + '+vs+') = '+fmt(fB)+'</code></div>';
+ if($('wk').checked){const fr=(n,d)=>'<span class="fr"><span>'+n+'</span><span>'+d+'</span></span>';
+  const col=(l,d,res)=>'<div class="wk"><span class="tag">'+l+'</span><div class="eq">f′ = f × '+fr('v','v '+d[0]+' vₛ')+' = '+f+' × '+fr('340','340 '+d[0]+' '+vs)+' = <code>'+fmt(res)+'</code></div></div>';
+  const h=col('A – source approaching','−',fA)+col('B – source moving away','+',fB);
   if(h!==frame.h){$('work').innerHTML=h;frame.h=h}}
  // sound
  if(ac&&gain){const fr=snd==='0'?fA:fB;gain.gain.setTargetAtTime(snd!=='off'&&playing?.06:0,ac.currentTime,.03);osc.frequency.setTargetAtTime(Math.min(2500,Math.max(80,fr)),ac.currentTime,.03)}
